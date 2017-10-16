@@ -1,0 +1,57 @@
+﻿@using PC.RMS.RP.Extensions
+@model string
+@{
+    List<int> value = new List<int>();
+
+    if (!string.IsNullOrEmpty(Model))
+    {
+        value = Model.Split(',').Select(s => int.Parse(s.Trim())).ToList();
+    }
+
+    var screenField = ViewData["screenField"] as ScreenFieldViewModel;
+    var multiSelect = Html.Kendo().MultiSelect()
+        .Name(ViewData.TemplateInfo.HtmlFieldPrefix)
+        .DataTextField("DisplayText")
+        .DataValueField("Id")
+        .Value(value)
+        .HtmlAttributes((ViewData["htmlAttributes"] as RouteValueDictionary)
+            .AddOrReplace("id", screenField.FieldDefinitionCode)
+            .AddOrMerge("style", "width: 100%;")
+            .AddOrMerge("class", "form-control"))
+        .AutoClose(false)
+        .ItemTemplate("")
+        .TagTemplate("<span data-id='#:data.Id#'>#:data.DisplayText#</span>")
+        .Filter("contains")
+        .DataSource(source => source
+            .Read(read => read
+                .Action("DomainListData", "DomainList", new
+                {
+                    area = string.Empty,
+                    domainListId = screenField.DomainListId.HasValue ? screenField.DomainListId.Value : 0,
+                    fieldDefinitionCode = screenField.FieldDefinitionCode
+                })
+            )
+            .ServerFiltering(true)
+        )
+        .Events(e => e
+            .Open("RMS.UI.Screen.ScreenField.EditorTemplates.MultiSelect.Events.Open")
+        )
+        .MoreEvents(this, e => e
+            .DocumentLoad("function(element) { $(element).parent().children(':first-child').append($('<span>').addClass('k-icon k-i-hbars')); }")
+        );
+}
+
+@multiSelect
+
+@* Certain form controls need to be just multiselects, w/o reorderability *@
+@if (Html.IsMultiselectFieldSortable(screenField.FieldDefinitionCode))
+{ 
+    @(Html.Kendo().Sortable()
+        .For("#" + screenField.FieldDefinitionCode + "_taglist")
+        .PlaceholderHandler("function(element) { return element.clone().addClass('placeholder'); }")
+        .HintHandler("function(element) { return element.clone().addClass('hint'); } ")
+        .Axis(SortableAxis.Y)
+        .Events(e => e
+            .Change("function() { RMS.UI.Screen.ScreenField.EditorTemplates.MultiSelect.Events.Change(this.items(), '" + multiSelect.ToComponent().Selector + "'); } "))
+    )
+}

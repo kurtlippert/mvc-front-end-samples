@@ -1,0 +1,89 @@
+﻿@using Kendo.Mvc.UI
+@using PC.RMS.Core.Common.Domain.Models
+@using PC.RMS.Web.Mvc.UI
+@using PC.RMS.Web.Mvc.Utils
+@model List<PC.RMS.RP.Areas.Administration.ViewModels.SourcingViewModel>
+
+@{
+    ViewBag.Title = "EditDelete";
+}
+
+@if (Model.Count <= 0)
+{
+    <p>@PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_NO_CONFIGS_FOUND)</p>
+}
+else
+{
+    <div id="advanced-sourcing-wizard-edit">
+        <div class="container-fluid" style="width: 400px; padding: 0; margin: 0;">
+            <div class="form-group row">
+                @(Html.Label(PageStringsUtils.GetString(PageStringsEnum.LBL_SELECT_CONFIGURATION), new { @class = "control-label col-xs-5", style = "padding-top: 6px; font-size: 13px; color: #666" }))
+                <div class="col-xs-7 col-snug">
+                    @(Html.Kendo().DropDownList().Name("advanced-sourcing-configurations")
+                        .HtmlAttributes(new { style = "width: 100%" })
+                        .DataValueField("Id")
+                        .DataTextField("Title")
+                        .BindTo(Model)
+                        .Height(400)
+                        .Template(@"
+                            <span class='k-state-default'>
+                                <h3 style='font-size: 1.3em; line-height: normal; padding: 5px;'>#: data.Title #</h3>
+                                <p style='font-size: 1.0em; line-height: normal; padding: 5px;'>#: data.Description #</p>
+                            </span>"
+                        )
+                    )
+                </div>
+            </div>
+            <div class="form-group row">
+                <div class="col-xs-offset-5 col-xs-7 col-snug">
+                    @(Html.RMS().ClickableContent("submit")
+                        .HtmlAttributes(new { type = "submit", @class = "btn btn-primary" })
+                        .OuterContentTag(HtmlTextWriterTag.Button)
+                        .InnerContent(@<text>@PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_EDIT_BTN)</text>)
+                        .Events(e => e
+                            .Click(
+                                Html.RMS().Dialog("AdvancedSourcingManageDialog")
+                                    .Title(PageStringsUtils.GetString(PageStringsEnum.LBL_MANAGE_SOURCING_CONFIGURATIONS))
+                                    .Events(ev => ev
+                                        .Open("RMS.UI.Dialog.CommonEvents.CloseTargetDialog($('div#SourcingManageDialog'))")
+                                    )
+                                    .ContentUrl(Url.RouteUrl("Administration_default", new { controller = "Sourcing", action = "Index" }))
+                                    .DataHandler(@"
+                                        function() {
+                                            return {
+                                                configurationId: $('div#advanced-sourcing-wizard-edit').find('#advanced-sourcing-configurations').data('kendoDropDownList').value()
+                                            };
+                                        }"
+                                    )
+                                    .ToDelegateString()
+                            )
+                        )
+                    )
+                    @(Html.RMS().ClickableContent("deleteConfig")
+                        .HtmlAttributes(new { type = "submit", @class = "btn" })
+                        .OuterContentTag(HtmlTextWriterTag.Button)
+                        .InnerContent(@<text>@PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_DELETE_BTN)</text>)
+                        .Events(e => e
+                            .Click(
+                                Html.RMS().Dialog("AdvancedSourcingManageDialog")
+                                    .Title(PageStringsUtils.GetString(PageStringsEnum.LBL_MANAGE_SOURCING_CONFIGURATIONS))
+                                    .Events(ev => ev
+                                        .Open("RMS.UI.Dialog.CommonEvents.CloseTargetDialog($('div#SourcingManageDialog'))")
+                                    )
+                                    .ContentUrl(Url.RouteUrl("Administration_default", new { controller = "Sourcing", action = "ConfirmDeleteConfiguration" }))
+                                    .DataHandler(@"
+                                        function() {
+                                            return {
+                                                configurationId: $('div#advanced-sourcing-wizard-edit').find('#advanced-sourcing-configurations').data('kendoDropDownList').value()
+                                            };
+                                        }"
+                                    )
+                                    .ToDelegateString()
+                            )
+                        )
+                    )
+                </div>
+            </div>
+        </div>
+    </div>
+}

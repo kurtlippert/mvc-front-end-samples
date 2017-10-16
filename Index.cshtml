@@ -1,0 +1,633 @@
+﻿@using Kendo.Mvc.UI
+@using PC.RMS.Core.Common.Domain.Models
+@using PC.RMS.RP.Areas.Administration.ViewModels
+@using PC.RMS.Web.Kendo.Mvc.UI.Fluent
+@using PC.RMS.Web.Mvc.UI
+@using PC.RMS.Web.Mvc.Utils
+@model SourcingViewModel
+@{
+    Layout = "~/Areas/Administration/Views/Shared/_LayoutModal.cshtml";
+    var inEditMode = (bool)ViewBag.IsEdit;
+}
+
+@using (Html.BeginForm(null, null, FormMethod.Post, new { id = "sourcing-wizard" }))
+{
+    <h3>@PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_STEP_1_TITLE)</h3>
+    <section>
+        <div class="row">
+            <div class="form-group">
+                @(Html.Label(PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_STEP_1_TITLE), new { @class = "control-label" }))
+                <p class="help-block-as name-configuration">
+                    @PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_STEP_1_INTRO)
+                </p>
+            </div>
+            <hr />
+        </div>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="form-group">
+                    @(Html.LabelFor(model => model.Title, PageStringsUtils.GetString(PageStringsEnum.LBL_CONFIGURATION_TITLE), new { @class = "control-label-as" }))
+                    <p class="help-block-as">
+                        @PageStringsUtils.GetString(PageStringsEnum.LBL_CONFIGURATION_TITLE_HELP)
+                    </p>
+                    @(Html.Kendo().TextBoxFor(model => model.Title)
+                        .HtmlAttributes(new
+                        {
+                            id = "configuration-title",
+                            name = "configuration-title",
+                            @class = "k-textbox-as",
+                            style = "width: 25%;"
+                        })
+                    )
+                    <span data-for="configuration-title" class="k-invalid-msg"></span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    @(Html.LabelFor(model => model.Description, PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_DESCRIPTION), new { @class = "control-label-as" }))
+                    <p class="help-block-as name-configuration-description">
+                        @PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_DESCRIPTION_HELP)
+                    </p>
+                    @(Html.TextArea("configuration-description", Model.Description, new
+                        {
+                            id = "configuration-description",
+                            @class = "k-textarea-as",
+                            maxlength = "200",
+                            style = "width: 25%; max-width: 50%; max-height: 4.4em; color:black"
+                        })
+                    )
+                    <span data-for="configuration-description" class="k-invalid-msg"></span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    @(Html.LabelFor(model => model.IsActive, PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_IS_ACTIVE), new { @class = "control-label-as" }))
+                    <p class="help-block-as name-configuration-description">
+                        @PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_IS_ACTIVE_HELP)
+                    </p>
+                    @(Html.Kendo().DropDownListFor(model => model.IsActive)
+                        .HtmlAttributes(new { id = "configuration-is-active" })
+                        .Value(Model.IsActive ? "yes" : "no")
+                        .DataTextField("Text")
+                        .DataValueField("Value")
+                        .BindTo(new List<SelectListItem>
+                        {
+                            new SelectListItem
+                            {
+                                Text = PageStringsUtils.GetString(PageStringsEnum.SRCH_NO),
+                                Value = "no",
+                            },
+                            new SelectListItem
+                            {
+                                Text = PageStringsUtils.GetString(PageStringsEnum.SRCH_YES),
+                                Value = "yes"
+                            }
+                        })
+                    )
+                </div>
+            </div>
+        </div>
+    </section>
+    <h3>@PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_STEP_2_TITLE)</h3>
+    <section>
+        <div class="row">
+            <div class="form-group">
+                @(Html.Label(PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_STEP_2_TITLE), new { @class = "control-label" }))
+                <p class="help-block-as">
+                    @PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_STEP_2_INTRO)
+                </p>
+            </div>
+            <hr />
+        </div>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="form-group">
+                    @(Html.LabelFor(model => model.SourceWorkflow, PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_SOURCE_WORKFLOW), new { @class = "control-label-as" }))
+                    <p class="help-block-as">
+                        @PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_SOURCE_WORKFLOW_HELP)
+                    </p>
+                    @(Html.Kendo().ComboBoxFor(model => model.SourceWorkflow)
+                        .HtmlAttributes(new { id = "source-workflows", name = "source-workflows", style = "width: 35%; font-size: 100%" })
+                        .Filter(FilterType.Contains)
+                        .MinLength(2)
+                        .DataTextField("Value")
+                        .DataValueField("Key")
+                        .DataSource(source => source
+                            .Read(read => read
+                                .Action("GetSourceWorkflows", "Sourcing")
+                            )
+                        )
+                        .ConditionalChange("RMS.UI.Administration.Sourcing.SourceWorkflows.InEditMode.Change", inEditMode)
+                        .MoreEvents(this, e => e
+                            .ConditionalFirstDataBound("function(e) { e.sender.value(" + Model.SourceWorkflow.Key + "); }", inEditMode)
+                        )
+                    ) 
+                    <span data-for="source-workflows" class="k-invalid-msg"></span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    @(Html.LabelFor(model => model.SourceRequisition, PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_SOURCE_REQ), new { @class = "control-label-as" }))
+                    <p class="help-block-as">
+                        @PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_SOURCE_REQ_HELP)
+                    </p>
+                    @(Html.Kendo().ComboBoxFor(model => model.SourceRequisition)
+                        .HtmlAttributes(new { id = "source-requisitions", name = "source-requisitions", style = "width: 35%;" })
+                        .Filter(FilterType.Contains)
+                        .MinLength(2)
+                        .DataTextField("Value")
+                        .DataValueField("Key")
+                        .DataSource(source => source
+                            .Read(read => read
+                                .Action("GetRequisitions", "Sourcing")
+                                .Data(@<text>
+                                    function(dataSource) { 
+                                        return {
+                                            workflowId: "@inEditMode" == "True" ? @Model.SourceWorkflow.Key : dataSource.filter.filters[0].value,
+                                            requisitionFilter: $('#sourcing-wizard').find('#source-requisitions').data('kendoComboBox').input.val()
+                                        };
+                                    }</text>
+                                )
+                            )
+                            .ServerFiltering(!inEditMode)
+                        )
+                        .Enable(inEditMode)
+                        .AutoBind(inEditMode)
+                        .ConditionallyCascadeFrom("source-workflows", !inEditMode)
+                        .MoreEvents(this, e => e
+                            .ConditionalFirstDataBound("function(e) { e.sender.value(" + Model.SourceRequisition.Key + "); }", inEditMode)
+                        )
+                    )
+                    <span data-for="source-requisitions" class="k-invalid-msg"></span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    @(Html.LabelFor(model => model.SourceFolder, PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_SOURCE_FOLDER), new { @class = "control-label-as" }))
+                    <p class="help-block-as">
+                        @PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_SOURCE_FOLDER_HELP)
+                    </p>
+                    @(Html.Kendo().ComboBoxFor(model => model.SourceFolder)
+                        .HtmlAttributes(new { id = "source-folders", name = "source-folders", style = "width: 35%;" })
+                        .Filter(FilterType.Contains)
+                        .MinLength(2)
+                        .DataTextField("Value")
+                        .DataValueField("Key")
+                        .DataSource(source => source
+                            .Read(read => read
+                                .Action("GetSourceFoldersForWorkflow", "Sourcing")
+                                .Data(@<text>
+                                    function(dataSource) { 
+                                        return {
+                                            workflowId: "@inEditMode" === "True" ? @Model.SourceWorkflow.Key : dataSource.filter.filters[0].value,
+                                            folderFilter: $('#sourcing-wizard').find('#source-folders').data('kendoComboBox').input.val()
+                                        };
+                                    }</text>
+                                )
+                            )
+                            .ServerFiltering(!inEditMode)
+                        )
+                        .Enable(inEditMode)
+                        .AutoBind(inEditMode)
+                        .ConditionallyCascadeFrom("source-workflows", !inEditMode)
+                        .MoreEvents(this, e => e
+                            .ConditionalFirstDataBound("function(e) { e.sender.value(" + Model.SourceFolder.Key + "); }", inEditMode)
+                        )
+                    )
+                    <span data-for="source-folders" class="k-invalid-msg"></span>
+                </div>
+            </div>
+        </div>
+    </section>
+    <h3>@PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_STEP_3_TITLE)</h3>
+    <section>
+        <div class="row">
+            <div class="form-group">
+                @(Html.Label(PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_STEP_3_TITLE), new { @class = "control-label" }))
+                <p class="help-block-as">
+                    @PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_STEP_3_INTRO)
+                </p>
+            </div>
+            <hr />
+        </div>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="form-group">
+                    @(Html.LabelFor(model => model.DestinationWorkflow, PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_DEST_WORKFLOW), new { @class = "control-label-as" }))
+                    <p class="help-block-as">@PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_DEST_WORKFLOW_HELP)</p>
+                    @(Html.Kendo().ComboBoxFor(model => model.DestinationWorkflow)
+                        .HtmlAttributes(new { id = "destination-workflows", name = "destination-workflows", style = "width: 35%;" })
+                        .Filter(FilterType.Contains)
+                        .MinLength(2)
+                        .DataTextField("Value")
+                        .DataValueField("Key")
+                        .DataSource(source => source
+                            .Read(read => read
+                                .Action("GetDestinationWorkflows", "Sourcing")
+                            )
+                        )
+                        .ConditionalChange("RMS.UI.Administration.Sourcing.DestinationWorkflows.InEditMode.Change", inEditMode)
+                        .MoreEvents(this, e => e
+                            .ConditionalFirstDataBound("function(e) { e.sender.value(" + Model.DestinationWorkflow.Key + "); }", inEditMode)
+                        )
+                    )
+                    <span data-for="destination-workflows" class="k-invalid-msg"></span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    @(Html.LabelFor(model => model.DestinationFolder, PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_DEST_FOLDER), new { @class = "control-label-as" }))
+                    <p class="help-block-as">@PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_DEST_FOLDER_HELP)</p>
+                    @(Html.Kendo().ComboBoxFor(model => model.DestinationFolder)
+                        .HtmlAttributes(new { id = "destination-folders", name = "destination-folders", style = "width: 35%;" })
+                        .Filter(FilterType.Contains)
+                        .MinLength(2)
+                        .DataTextField("Value")
+                        .DataValueField("Key")
+                        .DataSource(source => source
+                            .Read(read => read
+                                .Action("GetDestinationFoldersForWorkflow", "Sourcing")
+                                .Data(@<text>
+                                    function(dataSource) {
+                                        return {
+                                            workflowId: "@inEditMode" === "True" ? @Model.DestinationWorkflow.Key : dataSource.filter.filters[0].value,
+                                            folderFilter: $("#sourcing-wizard").find("#destination-folders").data("kendoComboBox").input.val()
+                                        };
+                                    }</text>
+                                )
+                            )
+                            .ServerFiltering(!inEditMode)
+                        )
+                        .Enable(inEditMode)
+                        .AutoBind(inEditMode)
+                        .ConditionallyCascadeFrom("destination-workflows", !inEditMode)
+                        .MoreEvents(this, e => e
+                            .ConditionalFirstDataBound("function(e) { e.sender.value(" + Model.DestinationFolder.Key + "); }", inEditMode)
+                        )
+                    )
+                    <span data-for="destination-folders" class="k-invalid-msg"></span>
+                </div>
+            </div>
+            <div class="row">
+                <div class="form-group">
+                    @(Html.LabelFor(model => model.FieldDefId, PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_CONFIGURATIONID), new { @class = "control-label-as" }))
+                    <p class="help-block-as">@PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_CONFIGURATIONID_HELP)</p>
+                    @(Html.Kendo().ComboBoxFor(model => model.FieldDefId)
+                        .HtmlAttributes(new { id = "field-def-id", name = "field-def-id", style = "width: 35%;" })
+                        .Filter(FilterType.Contains)
+                        .MinLength(2)
+                        .DataTextField("Value")
+                        .DataValueField("Key")
+                        .DataSource(source => source
+                            .Read(read => read
+                                .Action("GetPotentialConfigurationIdFields", "Sourcing")
+                                .Data(@<text>
+                                    function(dataSource) {
+                                        return {
+                                            requisitionId: "@inEditMode" === "True" ? @Model.SourceRequisition.Key : dataSource.filter.filters[0].value,
+                                            idFieldFilter: $("#sourcing-wizard").find("#field-def-id").data("kendoComboBox").input.val()
+                                        };
+                                    }</text>
+                                )
+                            )
+                            .ServerFiltering(!inEditMode)
+                        )
+                        .Enable(inEditMode)
+                        .AutoBind(inEditMode)
+                        .ConditionallyCascadeFrom("source-requisitions", !inEditMode)
+                        .MoreEvents(this, e => e
+                            .ConditionalFirstDataBound("function(e) {e.sender.value('" + Model.FieldDefId.Key + "'); }", inEditMode)
+                        )
+                    )
+                    <span data-for="field-def-id" class="k-invalid-msg"></span>
+                </div>
+            </div>
+        </div>
+    </section>
+    <h3>@PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_STEP_4_TITLE)</h3>
+    <section>
+        <div class="row">
+            <div class="form-group">
+                @(Html.Label(@PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_STEP_4_TITLE), new { @class = "control-label" }))
+                <p class="help-block-as top-read-more">
+                    @PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_STEP_4_INTRO)
+                </p>
+            </div>
+            <hr />
+        </div>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="form-group col-xs-3" style="padding-right: 0;">
+                    @(Html.LabelFor(model => model.StaticCriteriaOperator, PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_ALL_ANY), new { @class = "control-label" }))
+                    @(Html.RMS().ClickableContent("static-criteria-info")
+                        .HtmlAttributes(new { @class = "glyphicon glyphicon-info-sign", style = "cursor: pointer;" })
+                        .OuterContentTag(HtmlTextWriterTag.Span)
+                        .InnerContent(@<text> </text>)
+                        .Events(e => e
+                            .Click(
+                                Html.RMS().Dialog("StaticCriteriaInfo")
+                                .Title(PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_HOW_WE_FILTER))
+                                    .ContentUrl(Url.RouteUrl("Administration_default", new { controller = "Sourcing", action = "NegativeSearchInfo" }))
+                                    .ToDelegateString()
+                            )
+                        )
+                    )
+                    @(Html.Kendo().DropDownListFor(model => model.StaticCriteriaOperator)
+                        .HtmlAttributes(new { id = "static-criteria-operator", style = "width: 75%;" })
+                        .Value(Model.StaticCriteriaOperator)
+                        .DataTextField("Text")
+                        .DataValueField("Value")
+                        .BindTo(new List<SelectListItem>
+                        {
+                            new SelectListItem
+                            {
+                                Text = PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_ALL_CRITERIA),
+                                Value = "and",
+                            },
+                            new SelectListItem
+                            {
+                                Text = PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_ANY_CRITERIA),
+                                Value = "or"
+                            }
+                        })
+                    )
+                </div>
+                <div class="form-group col-xs-3" style="padding-right: 0; padding-left: 0;">
+                    @(Html.Label(PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_CANDIDATE_FIELD), new { @class = "control-label" }))
+                    @(Html.Kendo().ComboBox()
+                        .Name("searchable-candidate-fields-static")
+                        .HtmlAttributes(new { name = "searchable-candidate-fields-static", style = "width: 85%;" })
+                        .Filter("contains")
+                        .DataTextField("Displaytext")
+                        .DataValueField("SolrFieldName")
+                        .DataSource(dataSource => dataSource
+                            .Read(read => read
+                                .Action("GetSearchableCandidateFields", "Sourcing")
+                            )
+                        )
+                        .Events(events => events
+                            .Change("RMS.UI.Administration.Sourcing.GlobalCandidateFields.Change")
+                        )
+                        .MoreEvents(this, e => e
+                            .FirstDataBound("RMS.UI.Administration.Sourcing.GlobalCandidateFields.FirstDataBound"))
+                    )
+                </div>
+                <div id="text-area" class="form-group col-xs-3" style="padding-left: 0;">
+                    @(Html.Label(PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_SELECT_VALUE), new { @class = "control-label" }))
+                    <span><input id="value" type="text" class="k-textbox k-textbox-as" /></span>
+                </div>
+                <div id="domain-list-area" class="form-group col-xs-3" style="padding-left: 0;">
+                    @(Html.Label(PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_SELECT_VALUE), new { @class = "control-label" }))
+                    @(Html.Kendo().ComboBox()
+                        .Name("domain-list-values")
+                        .Filter("contains")
+                        .DataTextField("Value")
+                        .DataValueField("Key")
+                        .MinLength(2)
+                        .Enable(false)
+                        .AutoBind(false)
+                    )
+                </div>
+                <div id="operator-area" class="form-group col-xs-2" style="padding-left: 0; padding-right: 0">
+                    @(Html.Label(PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_OPERATOR), new { @class = "control-label" }))
+                    @(Html.Kendo().DropDownList()
+                        .Name("operator")
+                        .HtmlAttributes(new { style = "width: 75%;" })
+                        .Value("on")
+                        .DataTextField("Text")
+                        .DataValueField("Value")
+                        .BindTo(new List<SelectListItem>
+                        {
+                            new SelectListItem()
+                            {
+                                Text = PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_ON),
+                                Value = "on"
+                            },
+                            new SelectListItem()
+                            {
+                                Text = PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_BEFORE),
+                                Value = "before"
+                            },
+                            new SelectListItem()
+                            {
+                                Text = PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_AFTER),
+                                Value = "after"
+                            },
+                            new SelectListItem()
+                            {
+                                Text = PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_BETWEEN),
+                                Value = "between"
+                            }
+                        })
+                        .Events(e => e
+                            .Change("RMS.UI.Administration.Sourcing.GlobalCriteriaOperator.Change")
+                        )
+                    )
+                </div>
+                <div id="start-date-area" class="form-group col-xs-2" style="padding-left: 0; padding-right: 0">
+                    @(Html.Label(PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_SELECT_START_DATE), new { @class = "control-label" }))
+                    @(Html.Kendo().DatePicker()
+                        .Name("start-date")
+                        .HtmlAttributes(new { style = "width: 85%;" })
+                        .Events(e => e
+                            .Change("RMS.UI.Administration.Sourcing.GlobalCriteriaStartDate.Change")
+                        )
+                    )
+                </div>
+                <div id="end-date-area" class="form-group col-xs-2" style="padding-left: 0; padding-right: 0">
+                    @(Html.Label(PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_SELECT_END_DATE), new { @class = "control-label" }))
+                    @(Html.Kendo().DatePicker()
+                        .Name("end-date")
+                        .HtmlAttributes(new { style = "width: 85%;" })
+                        .Events(e => e
+                            .Change("RMS.UI.Administration.Sourcing.GlobalCriteriaEndDate.Change")
+                        )
+                    )
+                </div>
+            </div>
+            <div class="container-fluid">
+                <div class="row form-group margin-bottom-35">
+                    <button type="button" class="btn btn-primary margin-right-5" id="btn-static-add">@PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_ADD_BTN)</button>
+                    <button type="button" class="btn btn-primary" id="btn-static-rm">@PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_REMOVE_ALL_BTN)</button>
+                    <input name="static-grid" style="display: none;" /> 
+                    <span data-for="static-grid" class="k-invalid-msg"></span>
+                    <span data-for="searchable-candidate-fields-static" class="k-invalid-msg"></span>
+                    <span data-for="domain-list-values_input" class="k-invalid-msg"></span>
+                    <span data-for="start-date" class="k-invalid-msg"></span>
+                    <span data-for="end-date" class="k-invalid-msg"></span>
+                </div>
+                <div class="row form-group">
+                    @(Html.Kendo().Grid<StaticCriterionView>()
+                        .Name("static-criteria-grid")
+                        .HtmlAttributes(new { style = "max-height: 14em" })
+                        .DataSource(dataSource => dataSource
+                            .Ajax()
+                            .Read(read => read
+                                .Action("GetStaticCriteriaFromConfiguration", "Sourcing")
+                                .Data(@<text>function(e) { return { configurationId: "@Model.Id" }; }</text>)
+                            )
+                        )
+                        .Columns(columns =>
+                        {
+                            columns.Bound(c => c.Displaytext).Title(PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_CANDIDATE_FIELD));
+                            columns.Bound(c => c.Operator).Title(PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_OPERATOR));
+                            columns.Bound(c => c.DomainListValueDisplaytext).Title(PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_VALUE))
+                                .ClientTemplate(
+                                    @"<span>
+                                        #if (DomainListValueDisplaytext === null) {#
+                                            #if (Value !== null) {#
+                                                #=Value#
+                                            #}#
+                                        #} else {#
+                                            #=DomainListValueDisplaytext#
+                                        #}#
+                                        #if (StartDate !== null) {#
+                                            #=kendo.toString(StartDate, 'd')#
+                                        #}#
+                                        #if (EndDate !== null) {#
+                                             - #=kendo.toString(EndDate, 'd')#
+                                        #}#
+                                    </span>");
+                            columns.Bound(c => c.SearchDataTypeId).Hidden();
+                            columns.Bound(c => c.Value).Hidden();
+                            columns.Bound(c => c.DomainListId).Hidden();
+                            columns.Template(@<text></text>).ClientTemplate(
+                                "<span id='delete-row' class='iconOnly icon-delete' onclick='RMS.UI.Administration.Sourcing.DeleteGridRow(this);'></span>").Width(40);
+                        })
+                        .MoreEvents(this, e => e
+                            .ConditionalFirstDataBound("RMS.UI.Administration.Sourcing.GlobalCriteriaGrid.InEditMode.FirstDataBound", inEditMode)
+                        )
+                    )
+                </div>
+            </div>
+        </div>
+    </section>
+    <h3>@PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_STEP_5_TITLE)</h3>
+    <section>
+        <div class="row">
+            <div class="form-group">
+                @(Html.Label(PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_STEP_5_TITLE), new { @class = "control-label" }))
+                <p class="help-block-as top-read-more">
+                    @PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_STEP_5_INTRO)
+                </p>
+            </div>
+            <hr />
+        </div>
+        <div class="container-fluid">
+            <div class="row">
+                <div class="form-group col-xs-3" style="padding-right: 0;">
+                    @(Html.LabelFor(model => model.DynamicCriteriaOperator, PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_ALL_ANY), new { @class = "control-label" }))
+                    @(Html.RMS().ClickableContent("dynamic-criteria-info")
+                        .HtmlAttributes(new { @class = "glyphicon glyphicon-info-sign", style = "cursor: pointer;" })
+                        .OuterContentTag(HtmlTextWriterTag.Span)
+                        .InnerContent(@<text> </text>)
+                        .Events(e => e
+                            .Click(
+                                Html.RMS().Dialog("DynamicCriteriaInfo")
+                                    .Title(PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_HOW_WE_FILTER))
+                                    .ContentUrl(Url.RouteUrl("Administration_default", new { controller = "Sourcing", action = "NegativeSearchInfo" }))
+                                    .ToDelegateString()
+                            )
+                        )
+                    )
+                    @(Html.Kendo().DropDownListFor(model => model.DynamicCriteriaOperator)
+                        .HtmlAttributes(new { id = "dynamic-criteria-operator", style = "width: 75%;" })
+                        .Value(Model.DynamicCriteriaOperator)
+                        .DataTextField("Text")
+                        .DataValueField("Value")
+                        .BindTo(new List<SelectListItem>
+                        {
+                            new SelectListItem
+                            {
+                                Text = PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_ALL_CRITERIA),
+                                Value = "and",
+                            },
+                            new SelectListItem
+                            {
+                                Text = PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_ANY_CRITERIA),
+                                Value = "or"
+                            }
+                        })
+                    )
+                </div>
+                <div class="form-group col-xs-4" style="padding-right: 0; padding-left: 0;">
+                    @(Html.Label(PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_CANDIDATE_FIELD), new { @class = "control-label" }))
+                    @(Html.Kendo().ComboBox()
+                        .Name("searchable-candidate-fields-dynamic")
+                        .HtmlAttributes(new { style = "width: 85%;" })
+                        .Filter(FilterType.Contains)
+                        .MinLength(2)
+                        .DataTextField("Displaytext")
+                        .DataSource(dataSource => dataSource
+                            .Read(read => read
+                                .Action("GetSearchableCandidateFields", "Sourcing")
+                            )
+                        )
+                        .MoreEvents(this, e => e
+                            .FirstDataBound("RMS.UI.Administration.Sourcing.SpecificCandidateFields.FirstDataBound"))
+                    )
+                </div>
+                <div class="form-group col-xs-4" style="padding-right: 0;">
+                    @(Html.Label(PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_REQ_FIELD), new { @class = "control-label" }))
+                    @(Html.Kendo().ComboBox()
+                        .Name("searchable-requisition-fields-dynamic")
+                        .HtmlAttributes(new { style = "width: 85%;" })
+                        .Filter(FilterType.Contains)
+                        .MinLength(2)
+                        .DataTextField("Displaytext")
+                        .DataValueField("SearchDataTypeId")
+                        .DataSource(dataSource => dataSource
+                            .Read(read => read
+                                .Action("GetSearchableRequisitionFields", "Sourcing")
+                            )
+                        )
+                        .MoreEvents(this, e => e
+                            .FirstDataBound("RMS.UI.Administration.Sourcing.SpecificRequisitionFields.FirstDataBound"))
+                    )
+                </div>
+            </div>
+            <div class="container-fluid">
+                <div class="row form-group margin-bottom-35">
+                    <button type="button" class="btn btn-primary margin-right-5" id="btn-dynamic-add">@PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_ADD_BTN)</button>
+                    <button type="button" class="btn btn-primary" id="btn-dynamic-rm">@PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_REMOVE_ALL_BTN)</button>
+                    <span data-for="dynamic-grid" class="k-invalid-msg"></span>
+                    <span data-for="searchable-candidate-fields-dynamic_input" class="k-invalid-msg"></span>
+                    <span data-for="searchable-requisition-fields-dynamic_input" class="k-invalid-msg"></span>
+                </div>
+                <div class="row form-group">
+                    @(Html.Kendo().Grid<DynamicCriterionView>()
+                        .Name("dynamic-criteria-grid")
+                        .HtmlAttributes(new { style = "max-height: 14em" })
+                        .DataSource(dataSource => dataSource
+                            .Ajax()
+                            .Read(read => read
+                                .Action("GetDynamicCriteriaFromConfiguration", "Sourcing")
+                                .Data(@<text>function(e) { return { configurationId: "@Model.Id" }; }</text>)))
+                        .Columns(columns =>
+                        {
+                            columns.Bound(c => c.CandidateFieldDisplaytext).Title(PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_CANDIDATE_FIELD));
+                            columns.Bound(c => c.Operator).Title(PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_OPERATOR));
+                            columns.Bound(c => c.RequisitionFieldDisplaytext).Title(PageStringsUtils.GetString(PageStringsEnum.LBL_SOURCING_REQ_FIELD));
+                            columns.Bound(c => c.RequisitionFieldId).Hidden();
+                            columns.Bound(c => c.SolrFieldName).Hidden();
+                            columns.Bound(c => c.SearchDataTypeId).Hidden();
+                            columns.Template(@<text></text>).ClientTemplate(
+                                "<span id='delete-row' class='iconOnly icon-delete' onclick='RMS.UI.Administration.Sourcing.DeleteGridRow(this);'></span>").Width(40);
+                        })
+                        .MoreEvents(this, e => e
+                            .ConditionalFirstDataBound("RMS.UI.Administration.Sourcing.SpecificCriteriaGrid.InEditMode.FirstDataBound", inEditMode)
+                        )
+                    )
+                </div>
+            </div>
+        </div>
+    </section>
+}
+
+<script>
+
+    $(function() {
+        RMS.UI.Administration.Sourcing.InitializeWizard(("@inEditMode" === "True") ? JSON.parse(@Model.Id) : null);
+    });
+
+</script>
